@@ -103,10 +103,10 @@ Function/S tmpDirPath()
 End
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 // Clear variables
-Function clsGlobalVariables()
-	KillStrings/z outputPath
+Function DeleteGlobalVariables()
 	killWaves/z XW, YW // axis data
-	KillWaves/z wScaleProperties, wUnits, wAxis
+	KillWaves/z wUnits, wAxis
+	KillStrings/z outputPath
 End
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 // GUI for popup
@@ -171,34 +171,6 @@ Function ModifyXYScale(targetWave, xWave, yWave, bAddQuantToUnit)
 	setscale/i y, Str2Num(yWave[2]), Str2Num(yWave[3]), yUnit, targetWave
 End
 
-// Generate the waves for wScaleProperties, wUnits
-// PS. this code will be removed soon
-Static Function GetWaveScaleProperties(anyWave, rIdx, cIdx)
-	Wave anyWave
-	Variable rIdx, cIdx
-	Variable rStart = DimOffset(anyWave, rIdx)
-	Variable rDelta = DimDelta(anyWave, rIdx)
-	Variable rPts   = DimSize(anyWave, rIdx)
-
-        // Note. This code only supports igor pro version 6.3.x or above
-	Make/o/free/n=(3) ScaleProperties={rStart, rDelta, rPts} 
-        // 
-	return ScaleProperties[cIdx]
-End
-
-Function GenWaveScaleInfo(anyWave)
-	Wave anyWave
-	Variable r, c
-	Variable dim = WaveDims(anyWave)
-	Make/o/n=(dim, 3) wScaleProperties
-	Make/t/o/n=(dim) wUnits
-	For (r = 0; r < dim; r = r + 1)
-		wUnits[r] = WaveUnits(anyWave, r)
-		For (c = 0; c < DimSize(wScaleProperties, 1); c = c + 1)
-			wScaleProperties[r][c] = GetWaveScaleProperties(anyWave, r, c)
-		EndFor
-	EndFor
-End
 
 // Generate the wave for wAxis
 Function GenWaveAxisInfo(anyWave, bMatrixTranspose)
@@ -230,25 +202,17 @@ End
 Function WaveExportToDat(anyWave)
 	// Export the experimental data as (*.csv, *.dat), and save it in computer.
 	Wave anyWave
-	Variable testVersion = 1
 	Variable bMatrixTranspose = 1
-	Switch (testVersion)
-		Case 0:
-			GenWaveScaleInfo(anyWave)
-			Wave wScaleProperties, wUnits
-			SaveWaveAsDat(anyWave, "", "wData")
-			SaveWaveAsDat(wScaleProperties, NameOfWave(anyWave), "wScaleProperties")
-			SaveWaveAsDat(wUnits, NameOfWave(anyWave), "wUnits")
-			break
-		Case 1:
-			GenWaveAxisInfo(anyWave, bMatrixTranspose)
-			Wave wAxis
-			SaveWaveAsDat(anyWave, "", "wData")
-			SaveWaveAsDat(wAxis, NameOfWave(anyWave), "wAxisInfo")
-			break
-	Endswitch
-	KillWaves/z wScaleProperties, wUnits, wAxis
-	KillStrings/Z outputPath
+	// deal with data output
+	GenWaveAxisInfo(anyWave, bMatrixTranspose)
+	SaveWaveAsDat(anyWave, "", "wData")
+	// deal with data axis quantities output (xaxis, yaxis information)
+	Wave wAxis
+	SaveWaveAsDat(wAxis, NameOfWave(anyWave), "wAxisInfo")
+	// delete temp data
+	killWaves/z XW, YW // axis data
+	KillWaves/z wUnits, wAxis
+	KillStrings/z outputPath
 End
 
 Function SaveWaveAsDat(anyWave, prefix, titleEvent)
