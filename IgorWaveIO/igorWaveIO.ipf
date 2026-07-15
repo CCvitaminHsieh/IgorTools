@@ -63,6 +63,7 @@ Function/S  DataImportAsWave()
 	String folderPath = tmpDirPath()
 	NewDataFolder/o $folderPath
 	SetDataFolder  $folderPath
+	
 	// Select experiment rowdata to $FileName
 	String outputPath
 	outputPath = PopupFileDialog("wData", "Read", "")
@@ -71,9 +72,10 @@ Function/S  DataImportAsWave()
 		KillDataFolder/z GetDataFolder(1)
 	Else
 		String FileName = ParseFilePath(3, outputPath, ":", 0, 0)
-		LoadingTraces(outputPath)
-		MergeTracesToWave()
+		Variable TotalWaveNum = LoadTracesToDataBrowser(outputPath)
+		MergeTracesToWave(TotalWaveNum)
 		Rename $"TracesMerged", $FileName
+		
 		// Import AxisInfo and set the scale to $FileName
 		outputPath = PopupFileDialog("wAxisInfo", "Read", "")
 		If (StrLen(outputPath) == 0)
@@ -236,20 +238,23 @@ Function SaveWaveAsDat(anyWave, prefix, titleEvent)
 End
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 // Data Import
-Function LoadingTraces(outputPath)
+Function LoadTracesToDataBrowser(outputPath)
 	String outputPath
 	String folderPath = tmpDirPath()
 	LoadWave/o/a/d/g/k=0 outputPath
-	Variable/g TotalWaveNum = CountObjects(folderPath, 1)
+	//Variable/g TotalWaveNum = CountObjects(folderPath, 1)
+	Variable TotalWaveNum=CountObjects(folderPath, 1)
+	return TotalWaveNum
 End
 	
-Function MergeTracesToWave()
+Function MergeTracesToWave(TotalWaveNum)
+	Variable TotalWaveNum
 	Variable killTempFlag = 1
 	String necessaryWave  = "wave0"
 	String cFolderPath  = GetDataFolder(1)
 	If (WaveExists($necessaryWave))
-        	Variable idx 
-		Nvar TotalWaveNum
+      Variable idx 
+		//Nvar TotalWaveNum
 		Wave wave0 = $necessaryWave
 		String waveMergeName = "TracesMerged"
 		Variable wavPts = DimSize(wave0, 0)
