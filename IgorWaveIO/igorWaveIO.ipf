@@ -28,10 +28,6 @@
 // (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS
 // SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
-// Warning
-// This source code is for academic use only. 
-// DO NOT paste this program into your "Thesis".
-
 
 #pragma rtGlobals=3		     // Use modern global access method and strict wave access.
 #pragma IgorVersion = 6.37           // Check code for compatibility with Igor 6.37 or above
@@ -277,3 +273,4 @@ Function MergeTracesToWave(TotalWaveNum)
 		KillDataFolder/z $cFolderPath
 	EndIf
 End
+/////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
