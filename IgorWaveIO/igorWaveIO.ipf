@@ -55,7 +55,7 @@ End
 Function/S  DataImportAsWave()
 	// It will popup a dialog to import the experiment data ( *.csv, *.dat) into Data Browser.
 	// create a folder to store temporary waves, strings, variables
-	Variable killAxisFlag = 1
+	Variable ImportAxisFlag = 0
 	String folderPath = tmpDirPath()
 	NewDataFolder/o $folderPath
 	SetDataFolder  $folderPath
@@ -67,32 +67,20 @@ Function/S  DataImportAsWave()
 		Print "DataImportAsWave Cancelled!!!"
 		KillDataFolder/z GetDataFolder(1)
 	Else
+	   // Load csv file to Igor DataBrowser
 		String FileName = ParseFilePath(3, outputPath, ":", 0, 0)
 		Variable TotalWaveNum = LoadSliceToDataBrowser(outputPath)
 		MergeTracesToWave(TotalWaveNum)
 		Rename $"TracesMerged", $FileName
 		
 		// Import AxisInfo and set the scale to $FileName
-		outputPath = PopupFileDialog("wAxisInfo", "Read", "")
-		If (StrLen(outputPath) == 0)
-			Print "Import AxisInfo Cancelled!!!"
-		Else
-			// reference for LoadWave: 
-			// https://www.wavemetrics.com/forum/general/delimited-text
-			// https://www.wavemetrics.com/comment/21970
-			Variable bAddQuantToUnit = 0
-			LoadWave/O/Q/A/J/D/W/K=0/V={","," $",1,0}/L={0,0,0,0,4} outputPath
-			Wave/T XW, YW // Axis info for Xaxis, Yaxis
-			ModifyXYScale($FileName, XW, YW, bAddQuantToUnit)
-			// clean tmp waves and strings
-			If (killAxisFlag)
-				KillWaves/Z XW, YW
-			EndIf
-			KillStrings/Z outputPath
+		If (ImportAxisFlag == 1)
+			ImportAxisInfoToData(FileName)
 		EndIf
-	EndIf
-
+	Endif
 End
+
+
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 // Directory Path
 Function/S tmpDirPath()
@@ -267,5 +255,28 @@ Function MergeTracesToWave(TotalWaveNum)
 	// delete all global variables from temporary files
 	MoveWave $(cFolderPath + nameofwave(waveMerge)), root:
 	KillDataFolder/z $cFolderPath
+End
+
+Function ImportAxisInfoToData(FileName)
+	String FileName
+	String outputPath
+	Variable killAxisFlag = 1
+	outputPath = PopupFileDialog("wAxisInfo", "Read", "")
+	If (StrLen(outputPath) == 0)
+		Print "Import AxisInfo Cancelled!!!"
+	Else
+		// reference for LoadWave: 
+		// https://www.wavemetrics.com/forum/general/delimited-text
+		// https://www.wavemetrics.com/comment/21970
+		Variable bAddQuantToUnit = 0
+		LoadWave/O/Q/A/J/D/W/K=0/V={","," $",1,0}/L={0,0,0,0,4} outputPath
+		Wave/T XW, YW // Axis info for Xaxis, Yaxis
+		ModifyXYScale($FileName, XW, YW, bAddQuantToUnit)
+		// clean tmp waves and strings
+		If (killAxisFlag)
+			KillWaves/Z XW, YW
+		EndIf
+		KillStrings/Z outputPath
+	EndIf
 End
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
