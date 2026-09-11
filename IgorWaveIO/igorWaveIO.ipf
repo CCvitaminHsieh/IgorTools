@@ -46,10 +46,10 @@ Function SelectWaveToExport()
    Prompt anyWave, "Exported Wave:"popup Wavelist("*", ";", "")
    DoPrompt "Select and export a wave with (*.dat) extensions.", anyWave
    If (v_flag)
-     	Print "WaveExportToDat Cancelled!!!"
+     	Print "WaveExportToDatFormat Cancelled!!!"
      	return -1
    EndIf
-   WaveExportToDat($anyWave)
+   WaveExportToDatFormat($anyWave)
 End
 
 Function/S  DataImportAsWave()
@@ -68,7 +68,7 @@ Function/S  DataImportAsWave()
 		KillDataFolder/z GetDataFolder(1)
 	Else
 		String FileName = ParseFilePath(3, outputPath, ":", 0, 0)
-		Variable TotalWaveNum = LoadTracesToDataBrowser(outputPath)
+		Variable TotalWaveNum = LoadSliceToDataBrowser(outputPath)
 		MergeTracesToWave(TotalWaveNum)
 		Rename $"TracesMerged", $FileName
 		
@@ -171,9 +171,8 @@ End
 
 
 // Generate the wave for wAxis
-Function GenWaveAxisInfo(anyWave, bMatrixTranspose)
+Function GenWaveAxisInfo(anyWave)
 	Wave anyWave
-	Variable bMatrixTranspose
 	Variable r, c
 	Variable dim = WaveDims(anyWave)
 	Make/t/o/n=(2, 6) wAxis
@@ -191,29 +190,28 @@ Function GenWaveAxisInfo(anyWave, bMatrixTranspose)
 		wAxis[r][4] = Num2Str(DimOffset(anyWave, r) + (DimSize(anyWave, r) - 1) * DimDelta(anyWave, r)) // end
 		wAxis[r][5] = Num2Str(DimDelta(anyWave, r)) // delta
 	Endfor
-	If (bMatrixTranspose)
-		MatrixTranspose wAxis
-	EndIf
+	
+	MatrixTranspose wAxis
 End
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 // Data Export 
-Function WaveExportToDat(anyWave)
+Function WaveExportToDatFormat(anyWave)
 	// Export the experimental data as (*.csv, *.dat), and save it in computer.
 	Wave anyWave
-	Variable bMatrixTranspose = 1
-	// deal with data output
-	GenWaveAxisInfo(anyWave, bMatrixTranspose)
-	SaveWaveAsDat(anyWave, "", "wData")
-	// deal with data axis quantities output (xaxis, yaxis information)
+	// generate data 
+	GenWaveAxisInfo(anyWave)
+	ExportWaveAsDat(anyWave, "", "wData")
+	// generate quantities for AxisInformation
 	Wave wAxis
-	SaveWaveAsDat(wAxis, NameOfWave(anyWave), "wAxisInfo")
+	ExportWaveAsDat(wAxis, NameOfWave(anyWave), "wAxisInfo")
 	// delete temp data
 	killWaves/z XW, YW // axis data
 	KillWaves/z wUnits, wAxis
 	KillStrings/z outputPath
 End
 
-Function SaveWaveAsDat(anyWave, prefix, titleEvent)
+Function ExportWaveAsDat(anyWave, prefix, titleEvent)
+   // Save wave to dat file
 	Wave anyWave
 	String prefix, titleEvent
 	String datName
@@ -234,7 +232,7 @@ Function SaveWaveAsDat(anyWave, prefix, titleEvent)
 End
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 // Data Import
-Function LoadTracesToDataBrowser(outputPath)
+Function LoadSliceToDataBrowser(outputPath)
 	String outputPath
 	String folderPath = tmpDirPath()
 	LoadWave/o/a/d/g/k=0 outputPath
@@ -245,7 +243,6 @@ End
 	
 Function MergeTracesToWave(TotalWaveNum)
 	Variable TotalWaveNum
-	Variable killTempFlag = 1
 	String necessaryWave  = "wave0"
 	String cFolderPath  = GetDataFolder(1)
 	If (WaveExists($necessaryWave))
@@ -268,9 +265,7 @@ Function MergeTracesToWave(TotalWaveNum)
 		EndFor
 	EndIf
 	// delete all global variables from temporary files
-	If (killTempFlag)
-		MoveWave $(cFolderPath + nameofwave(waveMerge)), root:
-		KillDataFolder/z $cFolderPath
-	EndIf
+	MoveWave $(cFolderPath + nameofwave(waveMerge)), root:
+	KillDataFolder/z $cFolderPath
 End
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
