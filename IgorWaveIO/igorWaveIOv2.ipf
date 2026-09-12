@@ -1,5 +1,6 @@
 ﻿#pragma rtGlobals=3    // Use modern global access method and strict wave access
-
+#pragma IgorVersion = 6.37
+// This is a beta version for coding practice.
 //////////////////////////////////////////////////////////////////////////////
 // 常數集中管理
 //////////////////////////////////////////////////////////////////////////////
@@ -12,7 +13,7 @@ static constant    kMaxSupportedDim = 2
 //////////////////////////////////////////////////////////////////////////////
 // 選單
 //////////////////////////////////////////////////////////////////////////////
-Menu "Wave Import / Export"
+Menu "Data Browser Wave Import / Export"
 	"Import csv files as experimental wave", DataImportAsWave()
 	 help = {"Import data (*.csv) into Data Browser as a wave."}
 	"Export wave to dat files", SelectWaveToExport()
@@ -129,6 +130,7 @@ End
 // 單一 wave 匯出為 .dat
 Function ExportWaveAsDat(Wave anyWave, String prefix, String titleEvent)
 	String datName
+	Variable V_flag
 	If (StrLen(prefix) == 0)
 		Sprintf datName, "%s.dat", NameOfWave(anyWave)
 	Else
@@ -224,7 +226,7 @@ End
 
 // 讀取 _axisInfo 並套用到指定 wave 的 scale
 Function ImportAxisInfoToData(String fileName)
-	String outputPath = PopupFileDialog("wAxisInfo", "Read")
+	String outputPath = PopupFileDialog("wAxisInfo", "Read", "")
 	If (StrLen(outputPath) == 0)
 		Print "ImportAxisInfo Cancelled!!!"
 		return -1
